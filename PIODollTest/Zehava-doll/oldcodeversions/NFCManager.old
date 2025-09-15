@@ -1,0 +1,44 @@
+// #pragma once
+// #include <MFRC522.h>
+// #include <SPI.h>
+
+// enum Bus { BUS_NONE, BUS_VSPI, BUS_HSPI };
+
+// class NFCManager {
+// public:
+//     NFCManager(uint8_t ss1, uint8_t ss2, int8_t rst, uint8_t sck, uint8_t miso, uint8_t mosi);
+//     void begin();
+//     void pollReaders();
+// private:
+//     // HSPI
+//     uint8_t _ss1, _ss2, _sck, _miso, _mosi;
+//     int8_t _rst;
+//     MFRC522 _reader1;
+//     MFRC522 _reader2;
+//     // VSPI
+//     uint8_t _ss3, _ss4, _ss5;
+//     MFRC522 _reader3;
+//     MFRC522 _reader4;
+//     MFRC522 _reader5;
+//     // Bus switching
+//     Bus _currentBus = BUS_NONE;
+//     void printUid(const char* label, MFRC522& reader);
+//     void reinitCurrentBusReaders();
+//     void switchToVSPI();
+//     void switchToHSPI();
+//     void deselectAll(uint8_t a, uint8_t b, uint8_t c = 255);
+//     void pollReader(MFRC522 &rfid, uint8_t csThis, const char* label, uint8_t csA, uint8_t csB, uint8_t csC = 255);
+// };
+
+// // class NFCManager {
+// // public:
+// //     NFCManager(uint8_t ss1, uint8_t ss2, int8_t rst, uint8_t sck, uint8_t miso, uint8_t mosi);
+// //     void begin();
+// //     void pollReaders();
+// // private:
+// //     uint8_t _ss1, _ss2, _sck, _miso, _mosi;
+// //     int8_t _rst;
+// //     MFRC522 _reader1;
+// //     MFRC522 _reader2;
+// //     void printUid(const char* label, MFRC522& reader);
+// // };

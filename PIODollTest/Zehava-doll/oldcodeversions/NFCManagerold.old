@@ -1,0 +1,343 @@
+#include "NFCManager.h"
+#include <SPI.h>
+#include <Arduino.h>
+
+NFCManager::NFCManager(uint8_t ss1, uint8_t ss2, int8_t rst, uint8_t sck, uint8_t miso, uint8_t mosi)
+    : _ss1(ss1), _ss2(ss2), _rst(rst), _sck(sck), _miso(miso), _mosi(mosi),
+      _reader1(ss1, rst), _reader2(ss2, rst),
+      _ss3(4), _ss4(5), _ss5(15),
+      _reader3(_ss3, rst), _reader4(_ss4, rst), _reader5(_ss5, rst)
+{}
+
+enum BusType { BUS_NONE, BUS_VSPI, BUS_HSPI };
+
+struct ReaderConfig {
+    uint8_t csPin;
+    BusType bus;
+    bool enabled;
+};
+
+static const int MAX_READERS = 5;
+ReaderConfig readerConfigs[MAX_READERS] = {
+    {15, BUS_VSPI, false}, // VSPI reader 1
+    {4,  BUS_VSPI, false}, // VSPI reader 2
+    {5,  BUS_VSPI, false}, // VSPI reader 3
+    {25, BUS_HSPI, false}, // HSPI reader 1
+    {27, BUS_HSPI, false}  // HSPI reader 2
+};
+
+MFRC522* readers[MAX_READERS] = {nullptr};
+
+
+void NFCManager::begin() {
+    // Example: enable only VSPI readers
+    readerConfigs[0].enabled = true;
+    readerConfigs[1].enabled = true;
+    readerConfigs[2].enabled = false;
+    readerConfigs[3].enabled = false;
+    readerConfigs[4].enabled = false;
+
+    for (int i = 0; i < MAX_READERS; ++i) {
+        if (readerConfigs[i].enabled) {
+            pinMode(readerConfigs[i].csPin, OUTPUT);
+            digitalWrite(readerConfigs[i].csPin, HIGH);
+            readers[i] = new MFRC522(readerConfigs[i].csPin, -1);
+            // Switch SPI bus if needed
+            if (readerConfigs[i].bus == BUS_VSPI) {
+                SPI.end();
+                SPI.begin(18, 19, 23, readerConfigs[i].csPin);
+            } else if (readerConfigs[i].bus == BUS_HSPI) {
+                SPI.end();
+                SPI.begin(14, 12, 13, readerConfigs[i].csPin);
+            }
+            readers[i]->PCD_Init();
+            delay(50);
+        }
+    }
+}
+
+void NFCManager::pollReaders() {
+    BusType lastBus = BUS_NONE;
+    for (int i = 0; i < MAX_READERS; ++i) {
+        if (readerConfigs[i].enabled && readers[i]) {
+            // Switch SPI bus only if needed
+            if (readerConfigs[i].bus != lastBus) {
+                SPI.end();
+                delay(10);
+                if (readerConfigs[i].bus == BUS_VSPI) {
+                    SPI.begin(18, 19, 23, readerConfigs[i].csPin);
+                } else if (readerConfigs[i].bus == BUS_HSPI) {
+                    SPI.begin(14, 12, 13, readerConfigs[i].csPin);
+                }
+                delay(50);
+                lastBus = readerConfigs[i].bus;
+            }
+            // Deselect all CS pins for this bus
+            for (int j = 0; j < MAX_READERS; ++j) {
+                if (readerConfigs[j].bus == lastBus && readerConfigs[j].enabled) {
+                    digitalWrite(readerConfigs[j].csPin, HIGH);
+                }
+            }
+            // Select this reader
+            digitalWrite(readerConfigs[i].csPin, LOW);
+            SPI.beginTransaction(SPISettings(2000000, MSBFIRST, SPI_MODE0));
+            bool ok = readers[i]->PICC_IsNewCardPresent() && readers[i]->PICC_ReadCardSerial();
+            if (ok) {
+                printUid("Reader UID:", *readers[i]);
+                readers[i]->PICC_HaltA();
+                readers[i]->PCD_StopCrypto1();
+            }
+            SPI.endTransaction();
+            digitalWrite(readerConfigs[i].csPin, HIGH);
+            delay(10);
+        }
+    }
+    delay(100); // Breathing room between poll cycles
+}
+// void NFCManager::begin() {
+//     Serial.println("Manual SPI test...");
+    
+//     pinMode(_ss3, OUTPUT);
+//     digitalWrite(_ss3, HIGH);
+    
+//     SPI.begin(18, 19, 23, _ss3);
+//     delay(100);
+    
+//     // Manual version register read
+//     digitalWrite(_ss3, LOW);
+//     SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE0));
+    
+//     SPI.transfer(0x37);  // Version register address
+//     byte version = SPI.transfer(0x00);  // Read response
+    
+//     SPI.endTransaction();
+//     digitalWrite(_ss3, HIGH);
+    
+//     Serial.print("Manual version read: 0x");
+//     Serial.println(version, HEX);
+    
+//     // Now try normal MFRC522 init
+//     _reader3.PCD_Init();
+//     byte ver3 = _reader3.PCD_ReadRegister(_reader3.VersionReg);
+//     Serial.print("MFRC522 version read: 0x");
+//     Serial.println(ver3, HEX);
+// }
+
+// void NFCManager::begin() {
+//     // Set all CS pins as outputs and deselect
+//     pinMode(_ss1, OUTPUT); digitalWrite(_ss1, HIGH);
+//     pinMode(_ss2, OUTPUT); digitalWrite(_ss2, HIGH);
+//     pinMode(_ss3, OUTPUT); digitalWrite(_ss3, HIGH);
+//     pinMode(_ss4, OUTPUT); digitalWrite(_ss4, HIGH);
+//     pinMode(_ss5, OUTPUT); digitalWrite(_ss5, HIGH);
+
+//     Serial.println("Testing with only ONE VSPI reader...");
+    
+//     // Initialize VSPI readers - TEST WITH ONLY ONE
+//     switchToVSPI();
+//     _reader3.PCD_Init(); delay(50);
+//     // _reader4.PCD_Init(); delay(50);  // COMMENT OUT
+//     // _reader5.PCD_Init(); delay(50);  // COMMENT OUT
+
+//     byte ver3 = _reader3.PCD_ReadRegister(_reader3.VersionReg);
+//     Serial.print(F("Reader3 MFRC522 version: 0x"));
+//     Serial.println(ver3, HEX);
+//     if (ver3 == 0x00) Serial.println(F("❌ Reader3 communication failure"));
+
+//     // byte ver4 = _reader4.PCD_ReadRegister(_reader4.VersionReg);  // COMMENT OUT
+//     // Serial.print(F("Reader4 MFRC522 version: 0x"));
+//     // Serial.println(ver4, HEX);
+//     // if (ver4 == 0x00) Serial.println(F("❌ Reader4 communication failure"));
+
+//     // byte ver5 = _reader5.PCD_ReadRegister(_reader5.VersionReg);  // COMMENT OUT
+//     // Serial.print(F("Reader5 MFRC522 version: 0x"));
+//     // Serial.println(ver5, HEX);
+//     // if (ver5 == 0x00) Serial.println(F("❌ Reader5 communication failure"));
+// }
+
+// void NFCManager::pollReaders() {
+//     // Poll VSPI readers - TEST WITH ONLY ONE
+//     Serial.println("Switching to VSPI...");
+//     switchToVSPI();
+//     pollReader(_reader3, _ss3, "Reader3 UID:", _ss3, _ss4, _ss5);
+//     // pollReader(_reader4, _ss4, "Reader4 UID:", _ss3, _ss4, _ss5);  // COMMENT OUT
+//     // pollReader(_reader5, _ss5, "Reader5 UID:", _ss3, _ss4, _ss5);  // COMMENT OUT
+    
+//     delay(100);
+// }
+
+// void NFCManager::begin() {
+//     // Set all CS pins as outputs and deselect
+//     pinMode(_ss1, OUTPUT); digitalWrite(_ss1, HIGH);
+//     pinMode(_ss2, OUTPUT); digitalWrite(_ss2, HIGH);
+//     pinMode(_ss3, OUTPUT); digitalWrite(_ss3, HIGH);
+//     pinMode(_ss4, OUTPUT); digitalWrite(_ss4, HIGH);
+//     pinMode(_ss5, OUTPUT); digitalWrite(_ss5, HIGH);
+
+//     // Initialize HSPI readers
+//     // switchToHSPI();
+//     // _reader1.PCD_Init(); delay(50);
+//     // _reader2.PCD_Init(); delay(50);
+
+//     // byte ver1 = _reader1.PCD_ReadRegister(_reader1.VersionReg);
+//     // Serial.print(F("Reader1 MFRC522 version: 0x"));
+//     // Serial.println(ver1, HEX);
+//     // if (ver1 == 0x00) Serial.println(F("❌ Reader1 communication failure"));
+
+//     // byte ver2 = _reader2.PCD_ReadRegister(_reader2.VersionReg);
+//     // Serial.print(F("Reader2 MFRC522 version: 0x"));
+//     // Serial.println(ver2, HEX);
+//     // if (ver2 == 0x00) Serial.println(F("❌ Reader2 communication failure"));
+
+//     // Initialize VSPI readers
+//     switchToVSPI();
+//     _reader3.PCD_Init(); delay(50);
+//     _reader4.PCD_Init(); delay(50);
+//     _reader5.PCD_Init(); delay(50);
+
+//     byte ver3 = _reader3.PCD_ReadRegister(_reader3.VersionReg);
+//     Serial.print(F("Reader3 MFRC522 version: 0x"));
+//     Serial.println(ver3, HEX);
+//     if (ver3 == 0x00) Serial.println(F("❌ Reader3 communication failure"));
+
+//     byte ver4 = _reader4.PCD_ReadRegister(_reader4.VersionReg);
+//     Serial.print(F("Reader4 MFRC522 version: 0x"));
+//     Serial.println(ver4, HEX);
+//     if (ver4 == 0x00) Serial.println(F("❌ Reader4 communication failure"));
+
+//     byte ver5 = _reader5.PCD_ReadRegister(_reader5.VersionReg);
+//     Serial.print(F("Reader5 MFRC522 version: 0x"));
+//     Serial.println(ver5, HEX);
+//     if (ver5 == 0x00) Serial.println(F("❌ Reader5 communication failure"));
+// }
+
+// void NFCManager::pollReaders() {
+//     // // Poll HSPI readers
+//     // Serial.println("Switching to HSPI...");
+//     // switchToHSPI();
+//     // pollReader(_reader1, _ss1, "Reader1 UID:", _ss1, _ss2);
+//     // pollReader(_reader2, _ss2, "Reader2 UID:", _ss1, _ss2);
+
+//     // Poll VSPI readers
+//     Serial.println("Switching to VSPI...");
+//     switchToVSPI();
+//     pollReader(_reader3, _ss3, "Reader3 UID:", _ss3, _ss4, _ss5);
+//     pollReader(_reader4, _ss4, "Reader4 UID:", _ss3, _ss4, _ss5);
+//     pollReader(_reader5, _ss5, "Reader5 UID:", _ss3, _ss4, _ss5);
+    
+//     delay(100);  // Add some breathing room between poll cycles
+// }
+
+// void NFCManager::pollReaders() {
+//     // Poll HSPI readers
+//     switchToHSPI();
+//     pollReader(_reader1, _ss1, "Reader1 UID:", _ss1, _ss2);
+//     pollReader(_reader2, _ss2, "Reader2 UID:", _ss1, _ss2);
+
+//     // Poll VSPI readers
+//     switchToVSPI();
+//     pollReader(_reader3, _ss3, "Reader3 UID:", _ss3, _ss4, _ss5);
+//     pollReader(_reader4, _ss4, "Reader4 UID:", _ss3, _ss4, _ss5);
+//     pollReader(_reader5, _ss5, "Reader5 UID:", _ss3, _ss4, _ss5);
+// }
+
+// void NFCManager::pollReader(MFRC522 &rfid, uint8_t csThis, const char* label, uint8_t csA, uint8_t csB, uint8_t csC) {
+//     deselectAll(csA, csB, csC);
+//     digitalWrite(csThis, LOW);
+
+//     SPI.beginTransaction(SPISettings(2000000, MSBFIRST, SPI_MODE0));
+
+//     bool ok = rfid.PICC_IsNewCardPresent() && rfid.PICC_ReadCardSerial();
+//     if (ok) {
+//         printUid(label, rfid);
+//         rfid.PICC_HaltA();
+//         rfid.PCD_StopCrypto1();
+//     }
+
+//     SPI.endTransaction();
+//     digitalWrite(csThis, HIGH);
+// }
+
+// void NFCManager::deselectAll(uint8_t a, uint8_t b, uint8_t c) {
+//     if (a != 255) digitalWrite(a, HIGH);
+//     if (b != 255) digitalWrite(b, HIGH);
+//     if (c != 255) digitalWrite(c, HIGH);
+// }
+
+// void NFCManager::reinitCurrentBusReaders() {
+//     if (_currentBus == BUS_HSPI) {
+//         _reader1.PCD_Init();
+//         _reader2.PCD_Init();
+//         delay(10);
+//     } else if (_currentBus == BUS_VSPI) {
+//         _reader3.PCD_Init();
+//         _reader4.PCD_Init(); 
+//         _reader5.PCD_Init();
+//         delay(10);
+//     }
+// }
+// void NFCManager::switchToVSPI() {
+//     Serial.println("switchToVSPI() called");
+//     if (_currentBus != BUS_VSPI) {
+//         Serial.println("Ending SPI...");
+//         SPI.end();
+//         delay(10);
+//         Serial.println("Beginning VSPI...");
+//         SPI.begin(18, 19, 23, _ss3);  // VSPI pins
+//         Serial.println("VSPI begun, waiting...");
+//         delay(50);
+//         _currentBus = BUS_VSPI;
+//         Serial.println("VSPI switch complete");
+//     } else {
+//         Serial.println("Already on VSPI bus");
+//     }
+// }
+
+// void NFCManager::switchToVSPI() {
+//     if (_currentBus != BUS_VSPI) {
+//         SPI.end();
+//         delay(10);  // Increased delay
+//         SPI.begin(18, 19, 23, _ss3);  // VSPI pins
+//         delay(50);  // Longer stabilization delay
+//         _currentBus = BUS_VSPI;
+//     }
+// }
+
+// void NFCManager::switchToHSPI() {
+//     if (_currentBus != BUS_HSPI) {
+//         Serial.println("Ending SPI...");
+//         SPI.end();
+//         delay(10);
+//         Serial.println("Beginning HSPI with hardcoded pins...");
+//         SPI.begin(14, 12, 13, 25);  // Hardcoded HSPI pins for testing
+//         delay(50);
+//         _currentBus = BUS_HSPI;
+//         Serial.println("HSPI switch complete.");
+//     }
+// }
+// void NFCManager::switchToVSPI() {
+//     if (_currentBus != BUS_VSPI) {
+//         SPI.end();
+//         SPI.begin(18, 19, 23, _ss3);  // VSPI pins
+//         delay(2);
+//         _currentBus = BUS_VSPI;
+//     }
+// }
+
+// void NFCManager::switchToHSPI() {
+//     if (_currentBus != BUS_HSPI) {
+//         SPI.end();
+//         SPI.begin(_sck, _miso, _mosi, _ss1);  // HSPI pins
+//         delay(2);
+//         _currentBus = BUS_HSPI;
+//     }
+// }
+
+void NFCManager::printUid(const char* label, MFRC522& reader) {
+    Serial.print(label);
+    for (byte i = 0; i < reader.uid.size; i++) {
+        Serial.print(' ');
+        Serial.print(reader.uid.uidByte[i], HEX);
+    }
+    Serial.println();
+}

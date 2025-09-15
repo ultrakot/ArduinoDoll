@@ -1,0 +1,22 @@
+// #include <Arduino.h>
+// #include "NFCManagerV2.h"
+// #include "NFConeTest.h"
+
+// #define CS_PIN 15
+// #define SCK_PIN 18
+// #define MISO_PIN 19
+// #define MOSI_PIN 23
+
+// NFCManagerV2 nfc;
+// NFConeTest nfcTest(CS_PIN, SCK_PIN, MISO_PIN, MOSI_PIN);
+
+// void setup() {
+//     Serial.begin(115200);
+//     //nfc.begin();
+//     nfcTest.begin();
+// }
+
+// void loop() {
+//     //nfc.pollReaders();
+//     nfcTest.poll();
+// }

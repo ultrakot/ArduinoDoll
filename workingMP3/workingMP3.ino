@@ -33,7 +33,7 @@ void setup() {
 
   Serial.println("✅ DFPlayer initialized!");
   player.volume(20);
-  player.play(1);
+  player.play(2);
 }
 
 void loop() {

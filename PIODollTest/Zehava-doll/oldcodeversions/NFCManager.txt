@@ -1,0 +1,56 @@
+// #include "NFCManager.h"
+// #include <SPI.h>
+// #include <Arduino.h>
+
+// NFCManager::NFCManager(uint8_t ss1, uint8_t ss2, int8_t rst, uint8_t sck, uint8_t miso, uint8_t mosi)
+//     : _ss1(ss1), _ss2(ss2), _rst(rst), _sck(sck), _miso(miso), _mosi(mosi),
+//       _reader1(ss1, rst), _reader2(ss2, rst) {}
+
+// void NFCManager::begin() {
+//     SPI.begin(_sck, _miso, _mosi, _ss1);
+//     pinMode(_ss1, OUTPUT);
+//     pinMode(_ss2, OUTPUT);
+//     digitalWrite(_ss1, HIGH);
+//     digitalWrite(_ss2, HIGH);
+
+//     _reader1.PCD_Init();
+//     delay(50);
+//     _reader2.PCD_Init();
+//     delay(50);
+
+//     byte ver1 = _reader1.PCD_ReadRegister(_reader1.VersionReg);
+//     Serial.print(F("Reader1 MFRC522 version: 0x"));
+//     Serial.println(ver1, HEX);
+//     if (ver1 == 0x00) Serial.println(F("❌ Reader1 communication failure – check wiring & power"));
+
+//     byte ver2 = _reader2.PCD_ReadRegister(_reader2.VersionReg);
+//     Serial.print(F("Reader2 MFRC522 version: 0x"));
+//     Serial.println(ver2, HEX);
+//     if (ver2 == 0x00) Serial.println(F("❌ Reader2 communication failure – check wiring & power"));
+// }
+
+// void NFCManager::pollReaders() {
+//     // Reader 1
+//     if (_reader1.PICC_IsNewCardPresent() && _reader1.PICC_ReadCardSerial()) {
+//         printUid("Reader1 UID:", _reader1);
+//         _reader1.PICC_HaltA();
+//         _reader1.PCD_StopCrypto1();
+//         delay(200);
+//     }
+//     // Reader 2
+//     if (_reader2.PICC_IsNewCardPresent() && _reader2.PICC_ReadCardSerial()) {
+//         printUid("Reader2 UID:", _reader2);
+//         _reader2.PICC_HaltA();
+//         _reader2.PCD_StopCrypto1();
+//         delay(200);
+//     }
+// }
+
+// void NFCManager::printUid(const char* label, MFRC522& reader) {
+//     Serial.print(label);
+//     for (byte i = 0; i < reader.uid.size; i++) {
+//         Serial.print(' ');
+//         Serial.print(reader.uid.uidByte[i], HEX);
+//     }
+//     Serial.println();
+// }

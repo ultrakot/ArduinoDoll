@@ -1,7 +1,7 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
-#define SS_PIN  27
+#define SS_PIN  25
 #define RST_PIN -1   // tie RST on module to 3.3 V
 
 MFRC522 rfid(SS_PIN, RST_PIN);
