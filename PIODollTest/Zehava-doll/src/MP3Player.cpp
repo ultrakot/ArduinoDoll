@@ -29,7 +29,8 @@ bool MP3Player::begin() {
         return false;
     }
     Serial.println("✅ DFPlayer initialized!");
-    _player.volume(20);
+    _player.volume(20); // Increase volume slightly
+    delay(100); // Give time for volume command
     _ready = true;
     return true;
 }
@@ -37,6 +38,7 @@ bool MP3Player::begin() {
 void MP3Player::playTrack(uint16_t trackNum) {
     if (_ready) {
         _player.play(trackNum);
+        delay(50); // Small delay to ensure command is processed
     }
 }
 

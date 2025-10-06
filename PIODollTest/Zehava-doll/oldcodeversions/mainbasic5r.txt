@@ -1,0 +1,13 @@
+
+#include "NFCVSPI.h"
+
+NFCVSPI vspiNfc(5, 4, 15, 27, 25, 0); // 5 readers: CS pins 5, 4, 15, 27, 25, RST=0
+//NFCVSPI vspiNfc(15, 4, 5, 0); // 3 readers: CS pins 15, 4, 5, RST=0
+
+void setup() {
+	vspiNfc.begin();
+}
+
+void loop() {
+	vspiNfc.poll();
+}

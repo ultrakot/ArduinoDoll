@@ -57,3 +57,33 @@ void NFCHSPI::poll() {
         delay(200);
     }
 }
+
+bool NFCHSPI::poll(byte* foundUID, byte& foundSize, int& readerIndex) {
+    MFRC522* readers[2] = {_reader1, _reader2};
+    uint8_t ssPins[2] = {_ss1, _ss2};
+    
+    for (int i = 0; i < 2; i++) {
+        if (readers[i]) {
+            // Set all CS pins high, then select current reader
+            digitalWrite(_ss1, HIGH);
+            digitalWrite(_ss2, HIGH);
+            digitalWrite(ssPins[i], LOW);
+            
+            if (readers[i]->PICC_IsNewCardPresent() && readers[i]->PICC_ReadCardSerial()) {
+                // Copy UID to output parameters
+                foundSize = readers[i]->uid.size;
+                for (byte j = 0; j < foundSize; j++) {
+                    foundUID[j] = readers[i]->uid.uidByte[j];
+                }
+                readerIndex = i;
+                
+                readers[i]->PICC_HaltA();
+                readers[i]->PCD_StopCrypto1();
+                digitalWrite(ssPins[i], HIGH);
+                return true;  // Card found
+            }
+            digitalWrite(ssPins[i], HIGH);
+        }
+    }
+    return false;  // No card found
+}
