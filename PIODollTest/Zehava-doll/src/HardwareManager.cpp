@@ -28,7 +28,6 @@ void HardwareManager::initialize() {
     
     // Initialize MP3
     mp3Player->begin();
-    delay(200); // Give MP3 player time to initialize
     Serial.println("🎵 MP3 Player initialized");
     
     // Initialize NeoPixels
@@ -57,16 +56,26 @@ bool HardwareManager::detectCard(byte* uid, byte& size, int& reader) {
     return false;
 }
 
-void HardwareManager::playTrack(uint16_t track) {
-    if (currentTrack != track) {
-        if (mp3Player->isReady()) {
-            mp3Player->playTrack(track);
-            currentTrack = track;
-            Serial.print("▶️ Playing track "); Serial.println(track);
-        } else {
-            Serial.println("⚠️ MP3 Player not ready yet");
-        }
+void HardwareManager::playTrack(uint16_t track, bool forceRetry) {
+    Serial.print("▶️ playTrack called (track="); Serial.print(track);
+    Serial.print(", force="); Serial.print(forceRetry);
+    Serial.println(")");
+
+    // If not forcing retry and the requested track is already the current one, do nothing
+    if (!forceRetry && currentTrack == track) {
+        Serial.print("▶️ Already playing track "); Serial.println(track);
+        return;
     }
+
+    if (forceRetry) {
+        // Try a stop+play sequence to force the module to switch
+        mp3Player->stop();
+        delay(80);
+    }
+
+    mp3Player->playTrack(track);
+    currentTrack = track;
+    Serial.print("▶️ Now playing track "); Serial.println(track);
 }
 
 void HardwareManager::stopAudio() {

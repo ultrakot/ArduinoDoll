@@ -17,9 +17,9 @@ const byte UIDManager::UID_FEVER[4] = {0x34, 0x82, 0x36, 0x02}; // akamol
 // Medicine definitions with their audio tracks
 const UIDManager::UIDDefinition UIDManager::medicines[] = {
     {UID_ANTIBIOTICS, 7, ANTIBIOTICS, "Antibiotics", 2},
-    {UID_EARDROPS, 7, EARDROPS, "Ear Drops", 2},
-    {UID_OINTMENT, 7, OINTMENT, "Ointment", 2},
-    {UID_AKAMOL, 4, AKAMOL, "Akamol", 2}
+    {UID_EARDROPS, 7, EARDROPS, "Ear Drops", 3},
+    {UID_OINTMENT, 7, OINTMENT, "Ointment", 4},
+    {UID_AKAMOL, 4, AKAMOL, "Akamol", 5}
 };
 
 const int UIDManager::numMedicines = sizeof(medicines) / sizeof(medicines[0]);

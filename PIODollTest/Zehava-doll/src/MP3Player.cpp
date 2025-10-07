@@ -11,41 +11,37 @@ bool MP3Player::begin() {
     } else {
         _serial = &Serial;
     }
+    
     _serial->begin(9600, SERIAL_8N1, _rxPin, _txPin);
     Serial.printf("DFPlayer UART%d on RX=%d, TX=%d\n", _uartNum, _rxPin, _txPin);
-    Serial.println("Attempting DFPlayer.begin()...");
+    // Initialize DFPlayer
+    Serial.println("MP3: calling _player.begin()...");
     if (!_player.begin(*_serial)) {
-        Serial.println("▶️ player.begin() FAILED!");
-        unsigned long deadline = millis() + 2000;
-        while (millis() < deadline) {
-            if (_serial->available()) {
-                uint8_t b = _serial->read();
-                Serial.printf("  0x%02X ", b);
-            }
-        }
-        Serial.println("\n— end of dump —");
-        Serial.println("Check wiring, voltage, and levels.");
+        Serial.println("▶️ DFPlayer.begin() failed");
         _ready = false;
         return false;
     }
-    Serial.println("✅ DFPlayer initialized!");
-    _player.volume(20); // Increase volume slightly
-    delay(100); // Give time for volume command
+
+    Serial.println("MP3: DFPlayer.begin() succeeded");
+    Serial.println("MP3: setting volume to 20");
+    _player.volume(20);
+    Serial.println("✅ DFPlayer initialized and volume set");
     _ready = true;
     return true;
 }
 
 void MP3Player::playTrack(uint16_t trackNum) {
-    if (_ready) {
-        _player.play(trackNum);
-        delay(50); // Small delay to ensure command is processed
-    }
+    Serial.printf("MP3: playTrack(%d) requested\n", trackNum);
+    Serial.printf("MP3: sending play command to DFPlayer (track %d)\n", trackNum);
+    _player.play(trackNum);
+    Serial.printf("MP3: play command sent for track %d\n", trackNum);
 }
 
 void MP3Player::stop() {
-    if (_ready) {
-        _player.stop();
-    }
+    Serial.println("MP3: stop() requested");
+    Serial.println("MP3: sending stop command to DFPlayer...");
+    _player.stop();
+    Serial.println("MP3: stop command sent");
 }
 
 bool MP3Player::isReady() const {

@@ -7,12 +7,8 @@ GameLogic::GameLogic(HardwareManager* hw, DiseaseManager* dm)
 void GameLogic::initialize() {
     hardware->setDiseaseSymptoms(diseaseManager->getCurrentDisease(), diseaseManager->getEarColor());
     
-    // Give MP3 player time to fully initialize
-    delay(500);
-    
-    // Start with track 1 (sick/crying sound)
-    hardware->playTrack(1);
-    Serial.println("😷 Doll is sick - playing crying sound (track 1)");
+    // Audio disabled for polling test: would play track 1 here
+    Serial.println("😷 (TEST MODE) Audio disabled - would play crying sound (track 1)");
 }
 
 void GameLogic::update() {
@@ -50,40 +46,18 @@ void GameLogic::handleSickState() {
     int readerIndex;
     
     if (checkForCard(foundUID, foundSize, readerIndex)) {
-        Serial.print("💊 Medicine detected on reader "); Serial.println(readerIndex + 1);
-        
-        // Check for ear test UID first (if ear disease)
-        if (diseaseManager->requiresEarExamination() && 
-            UIDManager::isEarTestUID(foundUID, foundSize)) {
-            Serial.println("👂 Ear examination tool detected");
-            handleEarTestDetection(readerIndex);
-            changeState(STATE_EAR_TEST);
-            return;
-        }
-        
-        // Check for correct healing medicine
-        if (UIDManager::isDiseaseHealingUID(foundUID, foundSize, diseaseManager->getCurrentDisease())) {
-            if (!diseaseManager->isCorrectEarReader(readerIndex)) {
-                Serial.println("❌ Wrong location for red ear - medicine must be applied to correct ear");
-                return;
-            }
-            Serial.println("✅ Correct medicine detected - starting healing!");
-            changeState(STATE_HEALING);
-            return;
-        }
-        
-        // Check for other medicine UIDs (wrong medicine but still react)
+        Serial.print("💊 Card detected on reader "); Serial.println(readerIndex + 1);
+
+        // Identify medicine and play its dedicated track (no state changes)
         UIDManager::MedicineType medicine = UIDManager::identifyMedicine(foundUID, foundSize);
         if (medicine != UIDManager::UNKNOWN) {
             uint16_t track = UIDManager::getTrackForMedicine(medicine);
-            hardware->playTrack(track);
-            Serial.print("💊 Doll reacting to "); Serial.print(UIDManager::getMedicineName(medicine));
-            Serial.print(" (track "); Serial.print(track); Serial.println(")");
-            changeState(STATE_REACTING_TO_MEDICINE);
-            return;
+                // Audio removed for polling test: only print the track number that would be played
+                Serial.print("💊 (TEST MODE) Medicine "); Serial.print(UIDManager::getMedicineName(medicine));
+                Serial.print(" would play track "); Serial.println(track);
+        } else {
+            Serial.println("❓ Unknown UID - no medicine track");
         }
-        
-        Serial.println("❓ Unknown medicine detected - no reaction");
     }
     // Note: When no medicine is present, doll continues crying (track 1 set in initialize)
 }
@@ -94,10 +68,10 @@ void GameLogic::handleReactingToMedicineState() {
     int readerIndex;
     
     if (!checkForCard(foundUID, foundSize, readerIndex)) {
-        // Medicine removed, doll goes back to being sick
-        Serial.println("💊 Medicine removed - doll becomes sick again");
-        hardware->playTrack(1); // Resume crying sound
-        changeState(STATE_SICK);
+    // Medicine removed, doll goes back to being sick
+    Serial.println("💊 Medicine removed - doll becomes sick again");
+    Serial.println("😷 (TEST MODE) Would resume crying sound (track 1)");
+    changeState(STATE_SICK);
     }
     // Continue reacting while medicine is present
 }
@@ -108,10 +82,10 @@ void GameLogic::handleEarTestState() {
     int readerIndex;
     
     if (!checkForCard(foundUID, foundSize, readerIndex)) {
-        // Examination tool removed, go back to being sick
-        Serial.println("👂 Ear examination complete - doll is still sick");
-        hardware->playTrack(1); // Resume crying sound
-        changeState(STATE_SICK);
+    // Examination tool removed, go back to being sick
+    Serial.println("👂 Ear examination complete - doll is still sick");
+    Serial.println("😷 (TEST MODE) Would resume crying sound (track 1)");
+    changeState(STATE_SICK);
     }
     // NeoPixels remain on while examination is happening
 }
@@ -121,8 +95,8 @@ void GameLogic::handleHealingState() {
     Serial.println(" with correct medicine!");
     
     uint16_t healingTrack = diseaseManager->getHealingTrack();
-    hardware->playTrack(healingTrack);
-    Serial.print("😊 Playing happy/healing sound (track "); 
+    // Audio removed for polling test: only print the healing track number
+    Serial.print("😊 (TEST MODE) Would play healing sound (track "); 
     Serial.print(healingTrack); Serial.println(")");
     
     stateTimer = millis();
@@ -132,8 +106,7 @@ void GameLogic::handleHealingState() {
         delay(100);
     }
     
-    hardware->stopAudio();
-    Serial.println("✨ Doll is completely healed!");
+    Serial.println("✨ (TEST MODE) Doll is completely healed! (would stop audio)");
     changeState(STATE_GAME_OVER);
 }
 

@@ -19,10 +19,11 @@ void setup() {
     diseaseManager.initializeFromEEPROM();
     gameLogic.initialize();
     
-    // Uncomment line below for LED testing
-    // hardware.testAllLEDs();
-    
     Serial.println("🎯 Game ready!");
+    
+    // Force audio start as backup
+    Serial.println("🔊 Starting crying sound...");
+    Serial.println("😷 (TEST MODE) Audio disabled - would start crying sound (track 1)");
 }
 
 void loop() {

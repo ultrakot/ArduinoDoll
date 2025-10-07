@@ -12,7 +12,7 @@ void setup() {
   while (!Serial);
 
   // Explicitly map UART2 to your pins:
-  dfSerial.begin(9600, SERIAL_8N1, DF_RX_PIN, DF_TX_PIN);
+  //dfSerial.begin(9600, SERIAL_8N1, DF_RX_PIN, DF_TX_PIN);
   Serial.printf("DFPlayer UART2 on RX=%d, TX=%d\n", DF_RX_PIN, DF_TX_PIN);
 
   Serial.println("Attempting DFPlayer.begin()...");

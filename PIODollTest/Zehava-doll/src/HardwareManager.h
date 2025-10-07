@@ -21,7 +21,8 @@ public:
     
     void initialize();
     bool detectCard(byte* uid, byte& size, int& reader);
-    void playTrack(uint16_t track);
+    // Play a track; if forceRetry is true, the player will attempt a stop+play retry
+    void playTrack(uint16_t track, bool forceRetry = false);
     void stopAudio();
     void setDiseaseSymptoms(int disease, int earColor = 0);
     void setEarExaminationResult(int reader, bool infected);
