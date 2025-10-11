@@ -21,7 +21,7 @@ public:
     };
 
     // UID definitions
-    static const byte UID_AKAMOL[4];
+    static const byte UID_AKAMOL[7];
     static const byte UID_OINTMENT[7];
     static const byte UID_ANTIBIOTICS[7];
     static const byte UID_EARDROPS[7];
@@ -32,7 +32,7 @@ public:
     static const byte UID_ALLERGY[7];
     static const byte UID_EARPAIN[7];
     static const byte UID_EARINFECTION[7];
-    static const byte UID_FEVER[4];
+    static const byte UID_FEVER[7];
 
     // Medicine definitions
     static const UIDDefinition medicines[];

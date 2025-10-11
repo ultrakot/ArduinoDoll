@@ -20,6 +20,9 @@ private:
     
     HardwareManager* hardware;
     DiseaseManager* diseaseManager;
+
+    // remember which medicine triggered the healing transition
+    UIDManager::MedicineType lastMedicine;
     
 public:
     GameLogic(HardwareManager* hw, DiseaseManager* dm);

@@ -1,7 +1,7 @@
 #include "UIDManager.h"
 
 // UID definitions
-const byte UIDManager::UID_AKAMOL[4] = {0x34, 0x82, 0x36, 0x02};
+const byte UIDManager::UID_AKAMOL[7] = {0x04, 0xA1, 0x35, 0xB2, 0x35, 0x5E, 0x80};;
 const byte UIDManager::UID_OINTMENT[7] = {0x04, 0xA2, 0x34, 0xB2, 0x35, 0x5E, 0x80};
 const byte UIDManager::UID_ANTIBIOTICS[7] = {0x04, 0xBF, 0x36, 0xB2, 0x35, 0x5E, 0x80};
 const byte UIDManager::UID_EARDROPS[7] = {0x04, 0x49, 0xBB, 0x32, 0x59, 0x13, 0x90};
@@ -12,14 +12,14 @@ const byte UIDManager::UID_RUBELLA[7] = {0x04, 0xBF, 0x36, 0xB2, 0x35, 0x5E, 0x8
 const byte UIDManager::UID_ALLERGY[7] = {0x04, 0xA2, 0x34, 0xB2, 0x35, 0x5E, 0x80}; // ointment
 const byte UIDManager::UID_EARPAIN[7] = {0x04, 0x49, 0xBB, 0x32, 0x59, 0x13, 0x90}; // eardrops
 const byte UIDManager::UID_EARINFECTION[7] = {0x04, 0x49, 0xBB, 0x32, 0x59, 0x13, 0x90}; // eardrops
-const byte UIDManager::UID_FEVER[4] = {0x34, 0x82, 0x36, 0x02}; // akamol
+const byte UIDManager::UID_FEVER[7] = {0x04, 0xA1, 0x35, 0xB2, 0x35, 0x5E, 0x80};; // akamol
 
 // Medicine definitions with their audio tracks
 const UIDManager::UIDDefinition UIDManager::medicines[] = {
-    {UID_ANTIBIOTICS, 7, ANTIBIOTICS, "Antibiotics", 2},
+    {UID_ANTIBIOTICS, 7, ANTIBIOTICS, "Antibiotics", 5},
     {UID_EARDROPS, 7, EARDROPS, "Ear Drops", 2},
-    {UID_OINTMENT, 7, OINTMENT, "Ointment", 2},
-    {UID_AKAMOL, 4, AKAMOL, "Akamol", 2}
+    {UID_OINTMENT, 7, OINTMENT, "Ointment", 3},
+    {UID_AKAMOL, 7, AKAMOL, "Akamol", 4}
 };
 
 const int UIDManager::numMedicines = sizeof(medicines) / sizeof(medicines[0]);
@@ -65,7 +65,7 @@ bool UIDManager::isEarTestUID(const byte* uid, byte size) {
 
 bool UIDManager::isDiseaseHealingUID(const byte* uid, byte size, int diseaseIndex) {
     const byte* diseaseUIDs[] = {UID_RUBELLA, UID_ALLERGY, UID_EARPAIN, UID_EARINFECTION, UID_FEVER};
-    const byte diseaseSizes[] = {7, 7, 7, 7, 4};
+    const byte diseaseSizes[] = {7, 7, 7, 7, 7};
     
     if (diseaseIndex < 0 || diseaseIndex >= 5) return false;
     

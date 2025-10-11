@@ -29,7 +29,7 @@ bool MP3Player::begin() {
         return false;
     }
     Serial.println("✅ DFPlayer initialized!");
-    _player.volume(20); // Increase volume slightly
+    _player.volume(10); // Increase volume slightly
     delay(100); // Give time for volume command
     _ready = true;
     return true;

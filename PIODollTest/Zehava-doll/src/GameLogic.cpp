@@ -67,6 +67,8 @@ void GameLogic::handleSickState() {
                 Serial.println("❌ Wrong location for red ear - medicine must be applied to correct ear");
                 return;
             }
+            // store which medicine caused the healing transition
+            lastMedicine = UIDManager::identifyMedicine(foundUID, foundSize);
             Serial.println("✅ Correct medicine detected - starting healing!");
             changeState(STATE_HEALING);
             return;
@@ -119,26 +121,57 @@ void GameLogic::handleEarTestState() {
 void GameLogic::handleHealingState() {
     Serial.print("💊 Healing "); Serial.print(diseaseManager->getCurrentDiseaseName());
     Serial.println(" with correct medicine!");
+    hardware->turnOffAllLEDs();
+    // uint16_t healingTrack = diseaseManager->getHealingTrack();
+    // hardware->playTrack(healingTrack);
+    // Serial.print("😊 Playing happy/healing sound (track "); 
+    // Serial.print(healingTrack); Serial.println(")");
     
-    uint16_t healingTrack = diseaseManager->getHealingTrack();
-    hardware->playTrack(healingTrack);
-    Serial.print("😊 Playing happy/healing sound (track "); 
-    Serial.print(healingTrack); Serial.println(")");
+    // stateTimer = millis();
     
-    stateTimer = millis();
+    // // Wait for healing sound to finish
+    // while (millis() - stateTimer < 5000) {
+    //     delay(100);
+    // }
     
-    // Wait for healing sound to finish
-    while (millis() - stateTimer < 5000) {
-        delay(100);
+    // hardware->stopAudio();
+        // prefer the medicine track that caused the healing transition
+    uint16_t playTrack = 0;
+    if (lastMedicine != UIDManager::UNKNOWN) {
+        playTrack = UIDManager::getTrackForMedicine(lastMedicine);
+        Serial.print("💊 Playing medicine track for ");
+        Serial.print(UIDManager::getMedicineName(lastMedicine));
+        Serial.print(" (track ");
+        Serial.print(playTrack);
+        Serial.println(")");
+    } else {
+        // fallback to disease-specific happy track
+        playTrack = diseaseManager->getHealingTrack();
+        Serial.print("😊 Falling back to disease healing track (track ");
+        Serial.print(playTrack);
+        Serial.println(")");
     }
     
+    hardware->playTrack(playTrack);
+    
+        // wait for the track (safety timeout)
+    stateTimer = millis();
+    const unsigned long maxWaitMs = 10000UL;
+    const unsigned long pollInterval = 100UL;
+    while (millis() - stateTimer < maxWaitMs) {
+        delay(pollInterval);
+            // optional: break early if mp3 status available
+            // if (hardware->getMP3Player() && !hardware->getMP3Player()->isPlaying()) break;
+    }
+
+    // Skip waiting for healing sound and directly transition to GAME_OVER
     hardware->stopAudio();
     Serial.println("✨ Doll is completely healed!");
     changeState(STATE_GAME_OVER);
 }
 
 void GameLogic::handleGameOverState() {
-    hardware->turnOffAllLEDs();
+    // hardware->turnOffAllLEDs();
     Serial.println("🎉 Doll is healthy and happy! All symptoms gone - game complete!");
     Serial.println("⏹️ Program ended.");
     
