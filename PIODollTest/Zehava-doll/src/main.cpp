@@ -11,10 +11,10 @@ GameLogic gameLogic(&hardware, &diseaseManager);
 void setup() {
     Serial.begin(115200);
     delay(1000);
-    Serial.println("🎮 Zehava Doll Starting...");
+    Serial.println("Zehava Doll Starting...");
     
     // Initialize all systems
-    Serial.println("🚀 Initializing game...");
+    Serial.println("Initializing game...");
     hardware.initialize();
     diseaseManager.initializeFromEEPROM();
     gameLogic.initialize();
@@ -22,10 +22,12 @@ void setup() {
     // Uncomment line below for LED testing
     // hardware.testAllLEDs();
     
-    Serial.println("🎯 Game ready!");
+    Serial.println("Game ready!");
 }
 
 void loop() {
     gameLogic.update();
+    hardware.updateIR(); // Update IR controller
+    hardware.updateButton(); // Update button state
     delay(100);
 }

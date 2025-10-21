@@ -31,7 +31,7 @@ void DiseaseManager::initializeFromEEPROM() {
         generateRandomEarColor();
     }
     
-    Serial.print("🏥 Active disease: "); Serial.println(getCurrentDiseaseName());
+    Serial.print("Active disease: "); Serial.println(getCurrentDiseaseName());
 }
 
 const char* DiseaseManager::getCurrentDiseaseName() const {

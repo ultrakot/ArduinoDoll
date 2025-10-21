@@ -15,7 +15,7 @@ bool MP3Player::begin() {
     Serial.printf("DFPlayer UART%d on RX=%d, TX=%d\n", _uartNum, _rxPin, _txPin);
     Serial.println("Attempting DFPlayer.begin()...");
     if (!_player.begin(*_serial)) {
-        Serial.println("▶️ player.begin() FAILED!");
+        Serial.println("player.begin() FAILED!");
         unsigned long deadline = millis() + 2000;
         while (millis() < deadline) {
             if (_serial->available()) {
@@ -28,7 +28,7 @@ bool MP3Player::begin() {
         _ready = false;
         return false;
     }
-    Serial.println("✅ DFPlayer initialized!");
+    Serial.println("OK: DFPlayer initialized!");
     _player.volume(10); // Increase volume slightly
     delay(100); // Give time for volume command
     _ready = true;

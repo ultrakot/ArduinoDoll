@@ -45,4 +45,8 @@ public:
     static const char* getMedicineName(MedicineType medicine);
     static bool isEarTestUID(const byte* uid, byte size);
     static bool isDiseaseHealingUID(const byte* uid, byte size, int diseaseIndex);
+    
+    // Reader location validation
+    static bool isMedicineValidForReader(MedicineType medicine, int readerIndex);
+    static const char* getReaderLocationName(int readerIndex);
 };

@@ -65,9 +65,50 @@ bool UIDManager::isEarTestUID(const byte* uid, byte size) {
 
 bool UIDManager::isDiseaseHealingUID(const byte* uid, byte size, int diseaseIndex) {
     const byte* diseaseUIDs[] = {UID_RUBELLA, UID_ALLERGY, UID_EARPAIN, UID_EARINFECTION, UID_FEVER};
-    const byte diseaseSizes[] = {7, 7, 7, 7, 7};
+    const byte diseaseSizes[] = {7, 7, 7, 7, 4};
     
     if (diseaseIndex < 0 || diseaseIndex >= 5) return false;
     
     return compareUID(uid, size, diseaseUIDs[diseaseIndex], diseaseSizes[diseaseIndex]);
+}
+
+bool UIDManager::isMedicineValidForReader(MedicineType medicine, int readerIndex) {
+    // Reader mapping (readerIndex is 0-based from poll, but represents readers 1-5):
+    // Reader 0 (Reader 1) = Body
+    // Reader 1 (Reader 2) = Right Ear
+    // Reader 2 (Reader 3) = Mouth
+    // Reader 3 (Reader 4) = Left Ear
+    // Reader 4 (Reader 5) = Body
+    
+    switch (medicine) {
+        case AKAMOL:
+        case ANTIBIOTICS:
+            // Must be placed in mouth (Reader 3)
+            return (readerIndex == 2);
+            
+        case EARTEST:
+        case EARDROPS:
+            // Must be placed on ears (Readers 2 or 4)
+            return (readerIndex == 1 || readerIndex == 3);
+            
+        case OINTMENT:
+            // Must be applied to body (Readers 1 or 5)
+            return (readerIndex == 0 || readerIndex == 4);
+            
+        default:
+            // Unknown medicine - allow on any reader (backward compatible)
+            return true;
+    }
+}
+
+const char* UIDManager::getReaderLocationName(int readerIndex) {
+    // Reader location names for user feedback
+    switch (readerIndex) {
+        case 0: return "Body (Reader 1)";
+        case 1: return "Right Ear (Reader 2)";
+        case 2: return "Mouth (Reader 3)";
+        case 3: return "Left Ear (Reader 4)";
+        case 4: return "Body (Reader 5)";
+        default: return "Unknown Reader";
+    }
 }
